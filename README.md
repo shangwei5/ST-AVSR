@@ -14,50 +14,39 @@ This repository is the official PyTorch implementation of ST-AVSR: Arbitrary-Sca
 - Requirements: opencv-python, numpy, matplotlib, imageio, scikit-image, thop, tqdm, cupy(cupy-cuda117), mmcv-full=1.6.2
 
 ### Datasets
-Please download the RS-GOPRO datasets from [REDS](https://seungjunnah.github.io/Datasets/reds.html) (Type: Sharp) and [Vid4](https://drive.google.com/drive/folders/1An6hF1oYkeWxfOBxxKm073mvgIFrBNDA)
+Please download the RS-GOPRO datasets from [REDS](https://seungjunnah.github.io/Datasets/reds.html) (Type: Sharp) and [Vid4](https://drive.google.com/drive/folders/1An6hF1oYkeWxfOBxxKm073mvgIFrBNDA).
 
 ## Dataset Organization Form
 ```
-|--dataset
-    |--train  
-        |--video 1
-            |--GS
+|--REDS
+    |--train
+        |--train_sharp  
+            |--video 1
                 |--frame 1
                 |--frame 2
                     ：
-            |--RS
-                |--frame 1
-                |--frame 2
-                    ： 
-        |--video 2
-            :
-        |--video n
-    |--valid
-        |--video 1
-            |--GS
+            |--video 2
+                :
+            |--video n
+    |--val
+        |--val_sharp
+            |--video 1
                 |--frame 1
                 |--frame 2
                     ：
-            |--RS
-                |--frame 1
-                |--frame 2
-                    ：   
-        |--video 2
-         :
-        |--video n
-    |--test
-        |--video 1
-            |--GS
-                |--frame 1
-                |--frame 2
-                    ：
-            |--RS
-                |--frame 1
-                |--frame 2
-                    ：   
-        |--video 2
-         :
-        |--video n
+            |--video 2
+             :
+            |--video n
+```
+```
+|--Vid4
+    |--video 1
+        |--frame 1
+        |--frame 2
+            ：
+    |--video 2
+        :
+    |--video n
 ```
 
 ## Download Pre-trained Model
