@@ -79,7 +79,7 @@ Please change `--data_path` according to yours.
 
 ### 2) Training
 
-We use an NVIDIA RTX A6000 for training. Please adjust the `batch_size` and `test{'n_seq'}` in options based on your GPU memory.
+We use an NVIDIA RTX A6000 (48GB) for training. Please adjust the `batch_size` and `test{'n_seq'}` in options based on your GPU memory.
 ```
 python -m torch.distributed.launch --nproc_per_node=1 --master_port=1234 train.py --opt options/train_refsrrnn_cuf_siren_adists_only_future_t2.json --dist True
 ```
