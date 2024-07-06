@@ -8,9 +8,11 @@ This repository is the official PyTorch implementation of ST-AVSR: Arbitrary-Sca
 
 
 ### Examples of the Demo
-https://github.com/shangwei5/SelfDRSC/assets/43960503/6eda1861-219a-498a-899e-3c844e047ca9
+https://github.com/shangwei5/ST-AVSR/assets/43960503/3a8dd3c0-21fd-499c-8ccb-4362c6c5dcb0
 
+https://github.com/shangwei5/ST-AVSR/assets/43960503/42babacd-1b23-480b-9984-c205c62f2b6d
 
+https://github.com/shangwei5/ST-AVSR/assets/43960503/d18fd854-fee3-41f7-9c0a-de416ee49c8b
 
 ### Prerequisites
 - Python >= 3.8, PyTorch == 1.13.0 (Perhaps >=1.8.0 is also OK), CUDA 11.7
