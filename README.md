@@ -65,31 +65,26 @@ Please download the pre-trained model from [BaiduDisk]()(password:pjdx). Please 
 
 ## Getting Started
 ### 1) Testing
-1.Testing on RS-GOPRO dataset:
+1. Processing the entire video frame:
 ```
-python -m torch.distributed.launch --nproc_per_node=1 --master_port=1234 main_test_srsc_rsflow_multi_distillv2.py --opt options/test_srsc_rsflow_multi_distillv2_psnr.json  --dist True
+bash test_sequence.sh
 ```
-Please change `data_root` and `pretrained_netG` in options according to yours.
+Please change `--data_path` according to yours.
 
-1.Testing on real RS data:
+2. Processing frame by frame :
 ```
-python -m torch.distributed.launch --nproc_per_node=1 --master_port=1234 main_test_srsc_rsflow_multi_distillv2_real.py --opt options/test_srsc_rsflow_multi_distillv2_real.json  --dist True
+bash test.sh
 ```
-Please change `data_root` and `pretrained_netG` in options according to yours.
+Please change `--data_path` according to yours.
 
 ### 2) Training
-1.Training the first stage: (8 GPUs)
-```
-python -m torch.distributed.launch --nproc_per_node=8 --master_port=1234 main_train_srsc_rsflow_multi.py --opt options/train_srsc_rsflow_multi_psnr.json --dist True
-```
-Please change `data_root` and `pretrained_rsg` in options according to yours.
 
+We use an NVIDIA RTX A6000 for training. Please adjust the `batch_size` and `test{'n_seq'}` in options based on your GPU memory.
+```
+python -m torch.distributed.launch --nproc_per_node=1 --master_port=1234 train.py --opt options/train_refsrrnn_cuf_siren_adists_only_future_t2.json --dist True
+```
+Please change `gpu_ids`, `path{'root', 'images'}`, and `data_root` in options according to yours.
 
-2.Training the second stage (adding self-distillation): (8 GPUs)
-```
-python -m torch.distributed.launch --nproc_per_node=8 --master_port=1234 main_train_srsc_rsflow_multi_distillv2.py --opt options/train_srsc_rsflow_multi_distillv2_psnr.json  --dist True
-```
-Please change `data_root`, `pretrained_rsg` and `pretrained_netG` in options according to yours.
 
 ## Cite
 If you use any part of our code, or ST-AVSR is useful for your research, please consider citing:
