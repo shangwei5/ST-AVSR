@@ -1,0 +1,79 @@
+{
+  "task": "refsrrnn_cuf_siren_adists_only_future_t2"
+  , "model": "forwardrnn_cuf"
+  , "gpu_ids": [1]   //
+  , "dist": true
+
+  , "scale": 1       // broadcast to "netG"
+  , "n_channels": 3  // broadcast to "datasets", 1 for grayscale, 3 for color
+
+  , "path": {
+    "root": "/data1/shangwei"
+    , "images": "/data1/shangwei/results"
+    , "pretrained_netG": null  //
+    , "pretrained_netE": null
+  }
+
+  , "datasets": {
+    "train": {
+      "name": "train_dataset"           //  just name
+      , "data_root": "/data1/shangwei/dataset/video/REDS/"  //  path of H training dataset
+      , "patch_size": 80     //  256     //  patch size 40 | 64 | 96 | 128 | 192
+      , "dataloader_shuffle": true
+      , "dataloader_num_workers": 8
+      , "dataloader_batch_size": 8    //  batch size 1 | 16 | 32 | 48 | 64 | 128
+      , "no_augment": false
+      , "n_seq": 15
+      , "n_colors": 3
+    }
+    , "test": {
+      "name": "test_dataset"            // just name
+      , "data_root": "/data1/shangwei/dataset/video/REDS/"  // path of H training dataset    //
+      , "n_seq": 40
+      , "n_colors": 3
+    }
+  }
+
+  , "netG": {
+    "net_type": "refsrrnn_cuf_siren_adists_fgda_only_future"
+    , "count": 2
+  }
+
+  , "train": {
+    "G_lossfn_type": "1*Charbonnier" //"1*L1|1e-1*Perceptual"  //"1*ADIS"//  //"1*L1|2*HEM"   //  //"1*Charbonnier|1e-1*Perceptual"       //,
+
+    , "E_decay": 0                  // Exponential Moving Average for netG: set 0 to disable; default setting 0.999
+//    , "fix_keys": ["flow"]
+//    , "fix_iter": 100000
+//    , "fix_lr_mul": 1e-1
+
+    , "G_optimizer_type": "adam"        // fixed, adam is enough
+    , "G_optimizer_lr": 2e-4            // learning rate
+    , "G_optimizer_wd": 0 //1e-4               // weight decay, default 0
+    , "G_optimizer_clipgrad": 0      // unused  G_optimizer_clipgrad
+    , "G_optimizer_reuse": false
+
+    , "total_iter": 100000
+//    , "G_scheduler_type": "CosineAnnealingWarmRestarts"
+//    , "G_scheduler_periods": 100000
+//    , "G_scheduler_restart_weights": 0.5
+//    , "G_scheduler_eta_min": 1e-7
+
+     , "G_scheduler_type": "CosineAnnealingRestartCyclicLR"   //"CosineAnnealingWarmRestarts"  //"MultiStepLR" //
+    //, "G_scheduler_milestones": [100000, 150000, 200000, 300000] //0000//[10000, 50000]
+    //, "G_scheduler_gamma": 0.5
+    , "G_scheduler_periods": [300000] //100000 //[92000, 208000]  //[92, 208]  ////100000  [10000, 50000] //
+    , "G_scheduler_restart_weights": [1]
+    , "G_scheduler_eta_min": [1e-6]
+
+    , "G_regularizer_orthstep": null    // unused
+    , "G_regularizer_clipstep": null    // unused
+
+    , "G_param_strict": false
+    , "E_param_strict": false
+
+    , "checkpoint_test": 10000          // for testings
+    , "checkpoint_save": 10000           // for saving model
+    , "checkpoint_print": 500         // for print
+  }
+}
