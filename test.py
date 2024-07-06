@@ -326,7 +326,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', type=str, default='/data1/shangwei/dataset/video/REDS/val/val_sharp',
                         help='the path of test data')
     parser.add_argument('--model_path', type=str,
-                        default='./refsrrnn_cuf_siren_adists_allstage_only_future_t2_180000_G.pth',
+                        default='./refsrrnn_cuf_siren_adists_allstage_only_future_t2.pth',
                         help='the path of pretrain model')
     # parser.add_argument('--result_path', type=str,
     #                     default='/data1/shangwei/dataset/video/Vid4_val/results_verify/refsrrnn_cuf_siren_adists_allstage_only_future_t2/Vid4_val_X2.5_3.5',
