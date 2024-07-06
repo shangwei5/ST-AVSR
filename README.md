@@ -14,7 +14,7 @@ This repository is the official PyTorch implementation of ST-AVSR: Arbitrary-Sca
 - Requirements: opencv-python, numpy, matplotlib, imageio, scikit-image, thop, tqdm, cupy(cupy-cuda117), mmcv-full=1.6.2
 
 ### Datasets
-Please download the RS-GOPRO datasets from [REDS]() and [Vid4]()
+Please download the RS-GOPRO datasets from [REDS](https://seungjunnah.github.io/Datasets/reds.html) (Type: Sharp) and [Vid4](https://drive.google.com/drive/folders/1An6hF1oYkeWxfOBxxKm073mvgIFrBNDA)
 
 ## Dataset Organization Form
 ```
