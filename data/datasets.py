@@ -88,7 +88,7 @@ class VIDEODATA(data.Dataset):
 
         inputs_concat = np.concatenate(inputs, axis=2)
         if self.train:
-            scale = random.uniform(1, 8), random.uniform(1, 8)
+            scale = random.uniform(2, 6), random.uniform(2, 6)  # random.uniform(1, 4), random.uniform(1, 4) # random.uniform(1, 8), random.uniform(1, 8)
         else:
             scale = 4, 4
 
