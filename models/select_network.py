@@ -28,6 +28,10 @@ def define_G(opt):
         netG = net(n_inputs=opt_net['n_inputs'], blocks=opt_net['blocks'], feats=opt_net['feats'],
                    optical_flow_path=opt_net['flow_path'])
 
+    elif net_type == 'refsrrnn_cuf_siren':
+        from models.ArbVSR.refsrrnn import RefsrRNN as net
+        netG = net()
+
     elif net_type == 'refsrrnn_cuf_siren_adists_fgda_only_future':
         from models.ArbVSR.refsrrnn_adists_fgda_only_future import RefsrRNN as net
         netG = net(count=opt_net['count'])
