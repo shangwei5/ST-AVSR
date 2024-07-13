@@ -60,7 +60,7 @@ Our results on REDS and Vid4 can also be downloaded from [BaiduDisk](https://pan
 
 ## Getting Started
 ### 1) Testing
-1. Processing the entire video frame:
+1. Processing the entire video frames:
 ```
 bash test_sequence.sh
 ```
@@ -74,12 +74,26 @@ Please change `--data_path` according to yours.
 
 ### 2) Training
 
+1. Training ST-AVSR from scratch
 We use an NVIDIA RTX A6000 (48GB) for training. Please adjust the `batch_size` and `test{'n_seq'}` in options based on your GPU memory.
 ```
 python -m torch.distributed.launch --nproc_per_node=1 --master_port=1234 train.py --opt options/train_refsrrnn_cuf_siren_adists_only_future_t2.json --dist True
 ```
 Please change `gpu_ids`, `path{'root', 'images'}`, and `data_root` in options according to yours.
 
+2. Train B-AVSR first, then fine-tune ST-AVSR based on B-AVSR.
+We use an NVIDIA RTX A6000 (48GB) for training. Please adjust the `batch_size` and `test{'n_seq'}` in options based on your GPU memory.
+```
+python -m torch.distributed.launch --nproc_per_node=1 --master_port=1234 train.py --opt options/train_refsrrnn_cuf_siren.json --dist True
+```
+Please change `gpu_ids`, `path{'root', 'images'}`, and `data_root` in options according to yours.
+
+```
+python -m torch.distributed.launch --nproc_per_node=1 --master_port=1234 train.py --opt options/train_refsrrnn_cuf_siren_adists_only_future_t2.json --dist True
+```
+Please change `gpu_ids`, `path{'root', 'images', 'pretrained_netG'}`, and `data_root` in options according to yours.
+
+**Note: If ‘out of memory’ occurs during the validation, please adjust the appropriate sequence length `test{'n_seq'}`. The code of validation is implemented by processing the entire video sequence.**
 
 ## Cite
 If you use any part of our code, or ST-AVSR is useful for your research, please consider citing:
