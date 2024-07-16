@@ -1,6 +1,6 @@
 # Arbitrary-Scale Video Super-Resolution with Structural and Textural Priors (ECCV2024)
 ---
-[[arXiv]()] [[PDF]()]
+[[arXiv](https://arxiv.org/abs/2407.09919)] 
 
 This repository is the official PyTorch implementation of ST-AVSR: Arbitrary-Scale Video Super-Resolution with Structural and Textural Priors.
 
