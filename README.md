@@ -55,7 +55,7 @@ Please download the RS-GOPRO datasets from [REDS](https://seungjunnah.github.io/
 ```
 
 ## Download Pre-trained Model
-Please download the pre-trained model from [BaiduDisk](https://pan.baidu.com/s/1UBr9pQGhAHm66rr_VHzyTQ?pwd=47q3)(password:47q3). Please put the models to `./`.
+Please download the pre-trained model from [BaiduDisk](https://pan.baidu.com/s/1UBr9pQGhAHm66rr_VHzyTQ?pwd=47q3)(password:47q3) or [GoogleDrive](https://drive.google.com/file/d/15MiOh3rdvSAKW87-Ze1HSCSrOsn0peNK/view?usp=sharing). Please put the models to `./`.
 Our results on REDS and Vid4 can also be downloaded from [BaiduDisk](https://pan.baidu.com/s/1WDO9wRFp5cA-dBSlKazcLg?pwd=rkf7)(password:rkf7) and [BaiduDisk](https://pan.baidu.com/s/1nqUUfEo6tFhiEZuY9bdYqw?pwd=6gv9)(password:6gv9).
 
 ## Getting Started
