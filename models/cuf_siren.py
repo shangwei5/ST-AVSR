@@ -172,7 +172,7 @@ class KerP(nn.Module):
         self.imnets = Siren(in_features=imnet_in_dim, out_features=feat_dim, hidden_features=[feat_dim//sq_factor, feat_dim//sq_factor, feat_dim//sq_factor],
                                   hidden_layers=2, outermost_linear=True)   #MLP(imnet_in_dim, feat_dim)
 
-    def forward(self, feat, sample_coord, cell):
+    def forward(self, feat, sample_coord, cell, isTest=False):
         bs = feat.shape[0]
         r = self.r
         coord_lr = make_coord(feat.shape[-2:], flatten=False).to(sample_coord.device).permute(2, 0, 1).contiguous(). \
@@ -207,8 +207,13 @@ class KerP(nn.Module):
         pb3 = pb3.unsqueeze(1).repeat(1, self.r_area, 1, 1).view(-1, sample_coord_k.shape[1], 32)
         # print(pb1.shape, pb2.shape, pb3.shape)
         feat_in = torch.cat([pb1, pb2, pb3], dim=-1)
+        del pb1, pb2, pb3
+        torch.cuda.empty_cache()
 
-        pred = self.imnets(feat_in)  # b*r_area, q, feat_dim
+        if isTest:
+            pred = self.imnets(feat_in).cpu()  # b*r_area, q, feat_dim
+        else:
+            pred = self.imnets(feat_in)
         pred = pred.view(bs, self.r_area, sample_coord_k.shape[1], feat.shape[1]).contiguous().permute(0, 3, 1,
                                                                                                        2).contiguous()
         kernel = pred.view(bs, feat.shape[1] * self.r_area, -1).contiguous()
