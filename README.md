@@ -5,7 +5,8 @@
 This repository is the official PyTorch implementation of ST-AVSR: Arbitrary-Scale Video Super-Resolution with Structural and Textural Priors.
 
 ### Introduction
-![IMG_00001](https://github.com/user-attachments/assets/eaedb5a0-de70-45ac-bc73-4e8128334717)
+
+![IMG_00001](https://github.com/user-attachments/assets/5af17a79-dca6-432c-88f0-9fc3f81deeeb)
 
 Our method can achieve video SR with an arbitrary scale. If global SR is required, simply input the size of the target, which corresponds to `hr_coord` in the code. And the SR scale is related to `cell` in the code. If local super-resolution is required, `hr_coord` needs to be cropped.
 
