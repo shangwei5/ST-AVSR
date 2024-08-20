@@ -50,6 +50,7 @@ class Inference:
         self.device = 'cuda'
         self.GPUs = args.n_GPUs
         self.scale = args.space_scale
+        self.max_patch = args.max_patch
 
         if not os.path.exists(self.result_path):
             os.makedirs(self.result_path)
@@ -92,7 +93,7 @@ class Inference:
             # kernel = None
 
             for v in videos:
-                kernel = None
+
                 video_psnr = []
                 video_ssim = []
                 total_time = 0
@@ -101,24 +102,51 @@ class Inference:
                 start_time = time.time()
                 inputs = [imageio.imread(p) for p in input_frames]
                 h, w, c = inputs[0].shape
-                hr_coord = make_coord((h*float(self.scale[0]), w*float(self.scale[1]))).unsqueeze(0).to(self.device)
-
-                cell = torch.ones(2).unsqueeze(0).to(self.device)
-                cell[:, 0] *= 2. / h
-                cell[:, 1] *= 2. / w
-
+                target_h, target_w = int(h * float(self.scale[0])), int(w * float(self.scale[1]))
                 in_tensor = self.numpy2tensor(inputs, self.device)
 
+                num_h = h // self.max_patch + 1
+                num_w = w // self.max_patch + 1
+                new_h = num_h * self.max_patch
+                new_w = num_w * self.max_patch
+
+                pad_h = new_h - h
+                pad_w = new_w - w
+
+                pad_top = 0 #int(pad_h / 2.)
+                pad_bottom = pad_h #- pad_top
+                pad_left = 0  #int(pad_w / 2.)
+                pad_right = pad_w #- pad_left
+
+                paddings = (pad_left, pad_right, pad_top, pad_bottom)
+                new_input = [torch.nn.ReflectionPad2d(paddings)(in_tensor_) for in_tensor_ in in_tensor]
+                new_target_h, new_target_w = int(new_input[0].shape[-2] * float(self.scale[0])), int(new_input[0].shape[-1] * float(self.scale[1]))
+
+                output = torch.zeros([1, len(inputs), c, new_target_h, new_target_w], dtype=torch.float32, device=in_tensor[0].device)
                 torch.cuda.synchronize()
                 preprocess_time = time.time()
+                for i in range(num_h):
+                    for j in range(num_w):
+                        kernel = None
+                        target_h_, target_w_ = int(self.max_patch * float(self.scale[0])), int(self.max_patch * float(self.scale[1]))
+                        hr_coord = make_coord((target_h_, target_w_)).unsqueeze(0).to(self.device)
 
-                if kernel is None:
-                    print("Computing the upsampling kernnel...")
-                    res = torch.zeros((1, self.net.num_channels, in_tensor[0].shape[-2], in_tensor[0].shape[-1]), device=in_tensor[0].device)
-                    kernel = self.net.kernel_predict(res, hr_coord, cell, True)
-                    torch.cuda.empty_cache()
+                        cell = torch.ones(2).unsqueeze(0).to(self.device)
+                        cell[:, 0] *= 2. / target_h_
+                        cell[:, 1] *= 2. / target_w_
 
-                output = self.net.test_forward(in_tensor, kernel.cuda(), hr_coord).squeeze(0)  #T,C,H,W
+                        if kernel is None:
+                            print("Computing the upsampling kernnel...")
+                            res = torch.zeros(
+                                (1, self.net.num_channels, self.max_patch, self.max_patch),
+                                device=in_tensor[0].device)
+                            kernel = self.net.kernel_predict(res, hr_coord, cell, True)
+                            torch.cuda.empty_cache()
+                            # print(kernel.size())
+
+                        output[:, :, :, i * target_h_:(i + 1) * target_h_, j * target_w_:(j + 1) * target_w_] = self.net.test_forward([inp[:, :, i * self.max_patch:(i + 1) * self.max_patch,
+                                j * self.max_patch:(j + 1) * self.max_patch] for inp in new_input], kernel.cuda(), hr_coord).squeeze(0)  # T,C,H,W
+                output = output[:, :, :, :target_h, :target_w].squeeze(0)
 
                 torch.cuda.synchronize()
                 forward_time = time.time()
@@ -127,6 +155,15 @@ class Inference:
                 output_img = self.tensor2numpy(output)
                 gt = inputs
                 print(len(gt), len(output_img))
+                for i in range(len(input_frames)):
+                    filename = os.path.basename(input_frames[i]).split('.')[0]
+                    print(filename)
+
+                    if self.save_image:
+                        if not os.path.exists(os.path.join(self.result_path, v)):
+                            os.mkdir(os.path.join(self.result_path, v))
+                        imageio.imwrite(os.path.join(self.result_path, v, filename+'.png'), output_img[i])
+                    postprocess_time = time.time()
 
                 # if i != 0:
                 total_time = (forward_time - preprocess_time)
@@ -251,7 +288,7 @@ if __name__ == '__main__':
                         help='the path of test data')
     # parser.add_argument('--data_path', type=str, default='/data1/shangwei/dataset/video/REDS/val/val_sharp',
     #                     help='the path of test data')
-    parser.add_argument('--model_path', type=str, default='/data1/shangwei/refsrrnn_cuf_siren_adists_only_future_t2/models/450000_G.pth',
+    parser.add_argument('--model_path', type=str, default='/data1/shangwei/refsrrnn_cuf_siren_adists_only_future_t2.pth',
                         help='the path of pretrain model')
     parser.add_argument('--result_path', type=str,
                         default='/data1/shangwei/dataset/video/Vid4_val/results_verify/refsrrnn_cuf_siren_adists_only_future_t2/Vid4_val_X4',
@@ -259,7 +296,8 @@ if __name__ == '__main__':
     # parser.add_argument('--result_path', type=str,
     #                     default='/data1/shangwei/dataset/video/REDS/results_verify_/refsrrnn_cuf_siren_adists_allstage_only_future_t2/REDS_val_X8',
     #                     help='the path of deblur result')
-    parser.add_argument('--space_scale', type=str, default="4,4", help="upsampling space scale")
+    parser.add_argument('--space_scale', type=str, default="4,4", help="upsampling space scale")  #Non integers may have bugs
+    parser.add_argument('--max_patch', type=int, default=256, help="max patch size for processing")
     args = parser.parse_args()
     args.space_scale = args.space_scale.split(',')
     args.n_GPUs = 1
