@@ -1,4 +1,5 @@
 import os
+# os.environ['CUDA_VISIBLE_DEVICES'] = '9'
 import torch
 import glob
 import numpy as np
@@ -100,7 +101,7 @@ class Inference:
                 start_time = time.time()
                 inputs = [imageio.imread(p) for p in input_frames]
                 h, w, c = inputs[0].shape
-                hr_coord = make_coord((h*self.scale[0], w*self.scale[1])).unsqueeze(0).to(self.device)
+                hr_coord = make_coord((h*float(self.scale[0]), w*float(self.scale[1]))).unsqueeze(0).to(self.device)
 
                 cell = torch.ones(2).unsqueeze(0).to(self.device)
                 cell[:, 0] *= 2. / h
@@ -114,9 +115,10 @@ class Inference:
                 if kernel is None:
                     print("Computing the upsampling kernnel...")
                     res = torch.zeros((1, self.net.num_channels, in_tensor[0].shape[-2], in_tensor[0].shape[-1]), device=in_tensor[0].device)
-                    kernel = self.net.kernel_predict(res, hr_coord, cell)
+                    kernel = self.net.kernel_predict(res, hr_coord, cell, True)
+                    torch.cuda.empty_cache()
 
-                output = self.net.test_forward(in_tensor, kernel, hr_coord).squeeze(0)  #T,C,H,W
+                output = self.net.test_forward(in_tensor, kernel.cuda(), hr_coord).squeeze(0)  #T,C,H,W
 
                 torch.cuda.synchronize()
                 forward_time = time.time()
@@ -127,7 +129,7 @@ class Inference:
                 print(len(gt), len(output_img))
 
                 # if i != 0:
-                    total_time = (forward_time - preprocess_time)
+                total_time = (forward_time - preprocess_time)
 
                 total_time = total_time / (len(input_frames))
                 total_psnr[v] = video_psnr
@@ -245,19 +247,19 @@ if __name__ == '__main__':
 
     # parser.add_argument('--default_data', type=str, default='GOPRO',
     #                     help='quick test, optional: Adobe, GOPRO')
-    # parser.add_argument('--data_path', type=str, default='/data1/shangwei/dataset/video/Vid4_val/Vid4',
-    #                     help='the path of test data')
-    parser.add_argument('--data_path', type=str, default='/data1/shangwei/dataset/video/REDS/val/val_sharp',
+    parser.add_argument('--data_path', type=str, default='/data1/shangwei/dataset/video/Vid4_val/Vid4',
                         help='the path of test data')
-    parser.add_argument('--model_path', type=str, default='./refsrrnn_cuf_siren_adists_allstage_only_future_t2.pth',
+    # parser.add_argument('--data_path', type=str, default='/data1/shangwei/dataset/video/REDS/val/val_sharp',
+    #                     help='the path of test data')
+    parser.add_argument('--model_path', type=str, default='/data1/shangwei/refsrrnn_cuf_siren_adists_only_future_t2/models/450000_G.pth',
                         help='the path of pretrain model')
-    # parser.add_argument('--result_path', type=str,
-    #                     default='/data1/shangwei/dataset/video/Vid4_val/results_verify/refsrrnn_cuf_siren_adists_allstage_only_future_t2/Vid4_val_X2.5_3.5',
-    #                     help='the path of deblur result')
     parser.add_argument('--result_path', type=str,
-                        default='/data1/shangwei/dataset/video/REDS/results_verify_/refsrrnn_cuf_siren_adists_allstage_only_future_t2/REDS_val_X8',
+                        default='/data1/shangwei/dataset/video/Vid4_val/results_verify/refsrrnn_cuf_siren_adists_only_future_t2/Vid4_val_X4',
                         help='the path of deblur result')
-    parser.add_argument('--space_scale', type=str, default="8,8", help="upsampling space scale")
+    # parser.add_argument('--result_path', type=str,
+    #                     default='/data1/shangwei/dataset/video/REDS/results_verify_/refsrrnn_cuf_siren_adists_allstage_only_future_t2/REDS_val_X8',
+    #                     help='the path of deblur result')
+    parser.add_argument('--space_scale', type=str, default="4,4", help="upsampling space scale")
     args = parser.parse_args()
     args.space_scale = args.space_scale.split(',')
     args.n_GPUs = 1
