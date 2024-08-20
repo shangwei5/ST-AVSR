@@ -72,6 +72,12 @@ bash test.sh
 ```
 Please change `--data_path` according to yours.
 
+3. Processing other datasets with no GT:
+```
+python test_seq_yours.py --data_path  /your/data/path/  --model_path   /your/model/path/  --result_path  /your/result/path/   --space_scale "4,4"  --max_patch  256
+```
+`space_scale` currently only supports integers, and there may be some issues with non-integers. `max_patch` represents the size of the crop patch, which can be reduced if GPU memory is still insufficient.
+
 ### 2) Training
 1. Training ST-AVSR from scratch.
 
