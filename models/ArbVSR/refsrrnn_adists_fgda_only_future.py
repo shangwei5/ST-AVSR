@@ -141,54 +141,49 @@ class RefsrRNN(nn.Module):
         N, T, C, H, W = seqn_not_pad.shape
         seqn_not_pad_ = F.interpolate(seqn_not_pad.view(-1, C, H, W).contiguous(), size=(coord.shape[-3:-1]), mode='bicubic')
         seqn_not_pad_ = seqn_not_pad_.view(N, T, C, coord.shape[-3], coord.shape[-2]).contiguous()
-        seqdn = torch.empty_like(seqn_not_pad_)
+        seqdn = torch.empty_like(seqn_not_pad_).cpu()
         del seqn_not_pad_
-
-        # border_queue = []
-        # size_h, size_w = int(H * self.border_ratio), int(W * self.border_ratio)
+        torch.cuda.empty_cache()
 
         # reflect pad seqn and noise_level_map
-        seqn = torch.empty((N, T + self.count, C, H, W), device=seqn_not_pad.device)
+        seqn = torch.empty((N, T + self.count, C, H, W), device=arb_up_kernel.device)
         seqn[:, :T] = seqn_not_pad
         for i in range(self.count):
             seqn[:, T + i] = seqn_not_pad[:, T - 2 - i]
-
-        # flatten_map = generate_alpha(seqn.reshape(-1, C, H, W).contiguous()*255.).view(N, T+self.count*2, C, H, W).contiguous()
-        # flatten_map = self.adists(seqn.reshape(-1, C, H, W).contiguous()).view(N, T+self.count, self.num_channels, H, W).contiguous()
+        del seqn_not_pad
+        torch.cuda.empty_cache()
 
         inp1, inp2 = seqn[:, 1:].reshape(-1, C, H, W).contiguous(), seqn[:, :-1].reshape(-1, C, H, W).contiguous()
         flow = extract_flow_torch(self.pwcnet, inp1, inp2)
-        flow_queue = flow.view(N, T + self.count-1, 2, H, W).contiguous()
+        flow_queue = flow.view(N, T + self.count-1, 2, H, W).contiguous().cpu()
+        seqn = seqn.cpu()
+        torch.cuda.empty_cache()
 
         hidden_list = []
         prior_list = []
-        init_forward_h = torch.zeros((N, self.num_channels, H, W), device=seqn.device)
-        flatten_map = self.multi_prior_fusion(self.adists(seqn[:, 0]))
-        h_ = self.forward_rnn(torch.cat((seqn[:, 0], flatten_map, init_forward_h), dim=1))
+        init_forward_h = torch.zeros((N, self.num_channels, H, W), device=arb_up_kernel.device)
+        flatten_map = self.multi_prior_fusion(self.adists(seqn[:, 0].to(arb_up_kernel.device))).cpu()
+        h_ = self.forward_rnn(torch.cat((seqn[:, 0].to(arb_up_kernel.device), flatten_map.to(arb_up_kernel.device), init_forward_h), dim=1)).cpu()
         hidden_list.append(h_)
         prior_list.append(flatten_map)
+        torch.cuda.empty_cache()
         #arb_up_kernel = self.kernel_predict(h_, coord, cell)
         for j in range(1, self.count):
-            h_, _ = warp(h_, flow_queue[:, j-1])
-            flatten_map = self.multi_prior_fusion(self.adists(seqn[:, j]))
-            h_ = self.forward_rnn(torch.cat((seqn[:, j], flatten_map, h_), dim=1))
+            h_, _ = warp(h_.to(arb_up_kernel.device), flow_queue[:, j-1].to(arb_up_kernel.device))
+            flatten_map = self.multi_prior_fusion(self.adists(seqn[:, j].to(arb_up_kernel.device)))
+            h_ = self.forward_rnn(torch.cat((seqn[:, j].to(arb_up_kernel.device), flatten_map, h_), dim=1)).cpu()
             hidden_list.append(h_)
-            prior_list.append(flatten_map)
+            prior_list.append(flatten_map.cpu())
+            torch.cuda.empty_cache()
 
         for i in range(self.count, T + self.count):
-            # if i == self.count:
-            #     for j in range(i, i+self.count):
-            #         h_, _ = warp(h_, flow_queue[:, j - 1])
-            #         h_ = self.forward_rnn(torch.cat((seqn[:, j], flatten_map[:, j], h_), dim=1))
-            #         hidden_list.append(h_)
-            # else:
-            #     #print(hidden_list[-1].shape)
-            #     #print(flow_queue[:, i + self.count - 1].shape)
-            h_, _ = warp(hidden_list[-1], flow_queue[:, i-1])
-            flatten_map = self.multi_prior_fusion(self.adists(seqn[:, i]))
-            h_ = self.forward_rnn(torch.cat((seqn[:, i], flatten_map, h_), dim=1))
+
+            h_, _ = warp(hidden_list[-1].to(arb_up_kernel.device), flow_queue[:, i-1].to(arb_up_kernel.device))
+            flatten_map = self.multi_prior_fusion(self.adists(seqn[:, i].to(arb_up_kernel.device)))
+            h_ = self.forward_rnn(torch.cat((seqn[:, i].to(arb_up_kernel.device), flatten_map, h_), dim=1)).cpu()
             hidden_list.append(h_)
-            prior_list.append(flatten_map)
+            prior_list.append(flatten_map.cpu())
+            torch.cuda.empty_cache()
             if i > self.count:
                 hidden_list.pop(0)
                 prior_list.pop(0)
@@ -197,15 +192,15 @@ class RefsrRNN(nn.Module):
 
             refsr_flow_list = []
             for j in range(1, self.count+1):
-                refsr_flow_list.append(extract_flow_torch(self.pwcnet, seqn[:, i-self.count], seqn[:, i-self.count + j]))
+                refsr_flow_list.append(extract_flow_torch(self.pwcnet, seqn[:, i-self.count].to(arb_up_kernel.device), seqn[:, i-self.count + j].to(arb_up_kernel.device)))
 
             assert len(refsr_flow_list) == self.count
 
             hidden = hidden_list[0]
-            fusion_h = self.predict(hidden, refsr_flow_list, hidden_list[1:], hidden.size()[-2:])
+            fusion_h = self.predict(hidden.to(arb_up_kernel.device), refsr_flow_list, [hid.to(arb_up_kernel.device) for hid in hidden_list[1:]], hidden.size()[-2:])
 
-            h = self.forward_rnn2(torch.cat((seqn[:, i-self.count], prior_list[0], fusion_h), dim=1))
-            res = self.d(torch.cat([h, hidden], dim=1))
-            seqdn[:, i-self.count] = self.upsample(res, arb_up_kernel, coord, seqn[:, i-self.count])
+            h = self.forward_rnn2(torch.cat((seqn[:, i-self.count].to(arb_up_kernel.device), prior_list[0].to(arb_up_kernel.device), fusion_h), dim=1))
+            res = self.d(torch.cat([h, hidden.to(arb_up_kernel.device)], dim=1))
+            seqdn[:, i-self.count] = self.upsample(res, arb_up_kernel, coord, seqn[:, i-self.count].to(arb_up_kernel.device)).cpu()
 
         return seqdn
