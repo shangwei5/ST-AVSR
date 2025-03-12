@@ -108,11 +108,13 @@ Please change `gpu_ids`, `path{'root', 'images', 'pretrained_netG'}`, and `data_
 ## Cite
 If you use any part of our code, or ST-AVSR is useful for your research, please consider citing:
 ```
-@article{shang2024arbitrary,
+@inproceedings{shang2024arbitrary,
   title={Arbitrary-Scale Video Super-Resolution with Structural and Textural Priors},
   author={Shang, Wei and Ren, Dongwei and Zhang, Wanying and Fang, Yuming and Zuo, Wangmeng and Ma, Kede},
-  journal={arXiv preprint arXiv:2407.09919},
-  year={2024}
+  booktitle={European Conference on Computer Vision},
+  pages={73--90},
+  year={2024},
+  organization={Springer}
 }
 ```
 
