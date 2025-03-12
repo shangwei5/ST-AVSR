@@ -75,7 +75,7 @@ bash test.sh
 ```
 Please change `--data_path` according to yours.
 
-3. Processing other datasets with no GT:
+3. Processing other datasets without GT:
 ```
 python test_seq_yours.py --data_path  /your/data/path/  --model_path   /your/model/path/  --result_path  /your/result/path/   --space_scale "4,4"  --max_patch  256
 ```
