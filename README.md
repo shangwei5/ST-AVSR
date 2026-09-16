@@ -10,6 +10,16 @@ This repository is the official PyTorch implementation of ST-AVSR: Arbitrary-Sca
 
 Our method can achieve video SR with an arbitrary scale. If global SR is required, simply input the size of the target, which corresponds to `hr_coord` in the code. And the SR scale is related to `cell` in the code. If local super-resolution is required, `hr_coord` needs to be cropped.
 
+### Follow-up Work
+
+Following ST-AVSR, we further explore arbitrary-scale video super-resolution in:
+
+**BasicAVSR: Arbitrary-Scale Video Super-Resolution via Image Priors and Enhanced Motion Compensation**
+
+BasicAVSR replaces the pretrained-network-based structural and textural priors with adaptive multi-scale frequency priors derived directly from Laplacian pyramids, and introduces enhanced motion compensation for more accurate temporal alignment. The framework is further instantiated for online, quasi-online, and offline inference scenarios.
+
+[[Paper](https://arxiv.org/abs/2510.26149)] [[Code](https://github.com/shangwei5/BasicAVSR)]
+
 ### Examples of the Demo
 https://github.com/shangwei5/ST-AVSR/assets/43960503/3a8dd3c0-21fd-499c-8ccb-4362c6c5dcb0
 
